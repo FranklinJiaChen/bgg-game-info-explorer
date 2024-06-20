@@ -52,3 +52,26 @@ class BoardGame:
         print(f"Users Rated: {self.users_rated}")
         print(f"Average Rating: {self.average_rating}")
         print(f"Bayes Average Rating: {self.bayes_average_rating}")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "year_published": self.year_published,
+            "min_players": self.min_players,
+            "max_players": self.max_players,
+            "playing_time": self.playing_time,
+            "min_play_time": self.min_play_time,
+            "max_play_time": self.max_play_time,
+            "age": self.age,
+            "primary_name": self.primary_name,
+            "description": self.description,
+            "thumbnail": self.thumbnail,
+            "image": self.image,
+            "categories": self.categories,
+            "mechanics": self.mechanics,
+            "families": self.families,
+            "rank": self.rank,
+            "users_rated": self.users_rated,
+            "average_rating": self.average_rating,
+            "bayes_average_rating": self.bayes_average_rating
+        }

@@ -1,11 +1,12 @@
 import requests
 import xml.etree.ElementTree as ET
+import pandas as pd
 from boardgame_object import BoardGame
 
 # Define the base URL for the BoardGameGeek XML API
 BASE_URL = "https://boardgamegeek.com/xmlapi/boardgame"
 
-def get_game_info(game_id) -> BoardGame:
+def get_game_info(game_id: int) -> BoardGame:
     """
     Retrieve information for a specific game from the BoardGameGeek XML API.
 
@@ -22,12 +23,10 @@ def get_game_info(game_id) -> BoardGame:
     if response.status_code == 200:
         root = ET.fromstring(response.content)
 
-        print(f"Root tag: {root.tag}, attributes: {root.attrib}")
         game_element = root.find("boardgame")
 
         if game_element is not None:
             new_board_game = BoardGame()
-            game_info = {}
 
             new_board_game.id = game_element.get("objectid", "N/A")
             new_board_game.year_published = game_element.find("yearpublished").text if game_element.find("yearpublished") is not None else "N/A"
@@ -56,11 +55,40 @@ def get_game_info(game_id) -> BoardGame:
 
     return new_board_game
 
-def main():
-    game_ids = [391163, 1]
-    board_games = [get_game_info(game_id) for game_id in game_ids]
+def update_game_rank(board_game: BoardGame) -> BoardGame:
+    """
+    Update the rank information for a specific game from the BoardGameGeek rank csv.
+    """
+    df = pd.read_csv('boardgames_ranks.csv')
+    game_id = board_game.id
+    game_rank_info = df[df['id'] == int(game_id)]
+    if not game_rank_info.empty:
+        board_game.rank = game_rank_info['rank'].values[0]
+        board_game.users_rated = game_rank_info['usersrated'].values[0]
+        board_game.average_rating = game_rank_info['average'].values[0]
+        board_game.bayes_average_rating = game_rank_info['bayesaverage'].values[0]
+    else:
+        print(f"Rank information not found for game ID {game_id}")
+
+    return board_game
+
+def to_csv(board_games: list) -> None:
+    """
+    Write the information for a list of BoardGame objects to a CSV file.
+    """
+    data = []
     for game in board_games:
-        game.print_all_info()
+        data.append(game.to_dict())
+
+    df = pd.DataFrame(data)
+    df.to_csv("data/boardgames_info.csv", index=False)
+
+def main():
+    game_ids = [68448, 104006, 127398, 148949, 172308, 176494,
+                203417, 244521, 266192, 284083, 300531, 328479,
+                359970] # kennerspiel des jahres winner ids
+    board_games = [update_game_rank(get_game_info(game_id)) for game_id in game_ids]
+    to_csv(board_games)
 
 if __name__ == "__main__":
     main()
